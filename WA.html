@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Ticket Request via WhatsApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #passengerNames {
+            margin-top: 15px;
+        }
+        button {
+            background-color: #25D366;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #128C7E;
+        }
+    </style>
+</head>
+<body>
+    <h2>Air Ticket Request Form</h2>
+    <form onsubmit="return sendWhatsApp()">
+        <div class="form-group">
+            <label>Number of Adult Passengers:</label>
+            <input type="number" id="adults" min="1" max="10" value="1" required>
+        </div>
+
+        <div class="form-group">
+            <label>Number of Child Passengers:</label>
+            <input type="number" id="children" min="0" max="9" value="0" required>
+        </div>
+
+        <div id="passengerNames"></div>
+
+        <div class="form-group">
+            <label>Departure Airport:</label>
+            <input type="text" id="departure" required>
+        </div>
+
+        <div class="form-group">
+            <label>Arrival Airport:</label>
+            <input type="text" id="arrival" required>
+        </div>
+
+        <div class="form-group">
+            <label>Date of Travel:</label>
+            <input type="date" id="travelDate" required>
+        </div>
+
+        <button type="submit">Send via WhatsApp</button>
+    </form>
+
+    <script>
+        function updatePassengerFields() {
+            const adults = parseInt(document.getElementById('adults').value);
+            const children = parseInt(document.getElementById('children').value);
+            const total = adults + children;
+            const container = document.getElementById('passengerNames');
+            
+            container.innerHTML = '<h3>Passenger Names (as per passport)</h3>';
+            
+            if(total > 10) {
+                alert('Maximum 10 passengers allowed (including children)');
+                document.getElementById('children').value = 10 - adults;
+                updatePassengerFields();
+                return;
+            }
+
+            // Adult passengers
+            for(let i = 1; i <= adults; i++) {
+                container.innerHTML += `
+                    <div class="form-group">
+                        <label>Passenger ${i} (Adult) Full Name:</label>
+                        <input type="text" class="passenger-name" required>
+                    </div>
+                `;
+            }
+
+            // Child passengers with continued numbering
+            for(let i = 1; i <= children; i++) {
+                const passengerNumber = adults + i;
+                container.innerHTML += `
+                    <div class="form-group">
+                        <label>Passenger ${passengerNumber} (Child) Full Name:</label>
+                        <input type="text" class="passenger-name" required>
+                    </div>
+                `;
+            }
+        }
+
+        function sendWhatsApp() {
+            // Get form values
+            const adults = document.getElementById('adults').value;
+            const children = document.getElementById('children').value;
+            const departure = document.getElementById('departure').value;
+            const arrival = document.getElementById('arrival').value;
+            const travelDate = document.getElementById('travelDate').value;
+
+            // Validate all names are filled
+            const nameInputs = document.getElementsByClassName('passenger-name');
+            const isAnyEmpty = Array.from(nameInputs).some(input => input.value.trim() === '');
+            if(isAnyEmpty) {
+                alert('Please fill all passenger names');
+                return false;
+            }
+
+            // Create passenger list with numbering and type
+            const passengers = Array.from(nameInputs).map((input, index) => {
+                const passengerNumber = index + 1;
+                const type = index < adults ? '(Adult)' : '(Child)';
+                return `Passenger ${passengerNumber} ${type}: ${input.value}`;
+            });
+
+            // Create WhatsApp message
+            const message = `New Air Ticket Request:%0A%0A
+                *Adults:* ${adults}%0A
+                *Children:* ${children}%0A%0A
+                *Passenger List:*%0A${passengers.join('%0A')}%0A%0A
+                *Departure:* ${encodeURIComponent(departure)}%0A
+                *Arrival:* ${encodeURIComponent(arrival)}%0A
+                *Travel Date:* ${travelDate}`;
+
+            // Open WhatsApp
+            window.open(`https://wa.me/97431315398?text=${message}`, '_blank');
+            return false;
+        }
+
+        // Event listeners
+        document.getElementById('adults').addEventListener('input', updatePassengerFields);
+        document.getElementById('children').addEventListener('input', updatePassengerFields);
+        
+        // Initial setup
+        updatePassengerFields();
+    </script>
+</body>
+</html>
